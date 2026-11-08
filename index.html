@@ -19,10 +19,10 @@ button,.btn{font:inherit;color:inherit;background:none;border:0;padding:11px 12p
 .g{border:1px solid var(--ln);width:100%;margin:6px 0;display:block}
 .li{display:block;width:100%;text-align:left;background:var(--sf);border-bottom:1px solid var(--ln);padding:14px 12px}
 input,select{font:inherit;color:inherit;background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:10px;width:100%;margin:4px 0}
-.s{display:grid;grid-template-columns:26px 1fr 84px 70px 44px;gap:8px;align-items:center;padding:4px 2px;border-radius:8px}
-.s.d{background:var(--okbg)}.s.d button{color:var(--ok)}
+.s{display:grid;grid-template-columns:30px 1fr 76px 64px 40px 40px;gap:6px;align-items:center;padding:4px 2px;border-radius:8px}
+.s.d{background:var(--okbg)}.s.d .k{color:var(--ok)}.h{font-size:13px;color:var(--mu);text-align:center}.h span:nth-child(2){text-align:left}.s button{padding:10px 0}
 .n{font:600 20px "Avenir Next Condensed","Arial Narrow",sans-serif;text-align:center}
-.s input{text-align:center;font-size:20px;font-weight:600;margin:0;font-variant-numeric:tabular-nums}
+.s input{text-align:center;font-size:20px;font-weight:600;margin:0;padding:10px 2px;font-variant-numeric:tabular-nums}
 .mu{color:var(--mu);font-size:14px}
 nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--sf);border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;padding:15px 0;border-radius:0}nav .on{color:var(--ac);font-weight:700}
@@ -40,14 +40,14 @@ const fmtDur=s=>s==null?'':s>=3600?`${Math.floor(s/3600)}h ${Math.floor(s%3600/6
 const ws=()=>[...db.w].sort((a,b)=>b.d.localeCompare(a.d));
 const names=()=>[...new Set(db.w.flatMap(w=>w.x.map(e=>e.n)))].sort();
 const last=(n,id)=>{for(const w of ws()){if(w.id===id)continue;const e=w.x.find(e=>e.n===n);if(e)return e.s}return null};
-function mk(n,k){const l=last(n);k=k||(l?l.length:3);return{n,s:Array.from({length:k},(_,i)=>{const q=l?(l[i]||l[l.length-1]):{};return{w:q.w??'',r:q.r??'',d:false}})}}
+function mk(n,k){const l=last(n);k=k||(l?l.length:3);return{n,s:Array.from({length:k},(_,i)=>{const q=l?(l[i]||l[l.length-1]):{};return{w:'',r:'',pw:q.w??'',pr:q.r??'',d:false}})}}
 function start(t){ed=db.a={id:uid(),d:stamp(new Date()),n:t?t.n:'Workout',t0:Date.now(),x:t?t.x.map(e=>mk(e.n,e.k)):[]};hist=false;save()}
-function clean(w){return{id:w.id,d:w.d,n:w.n||'Workout',u:w.u??null,x:w.x.map(e=>({n:e.n,s:e.s.filter(s=>(hist||s.d)&&s.r!=='').map(s=>({w:parseFloat(s.w)||0,r:parseFloat(s.r)||0}))})).filter(e=>e.s.length)}}
+function clean(w){return{id:w.id,d:w.d,n:w.n||'Workout',u:w.u??null,x:w.x.map(e=>({n:e.n,s:e.s.filter(s=>hist||s.d||s.w!==''||s.r!=='').map(s=>({w:parseFloat(s.w!==''?s.w:s.pw)||0,r:parseFloat(s.r!==''?s.r:s.pr)||0})).filter(s=>s.r>0||s.w>0)})).filter(e=>e.s.length)}}
 function home(){return`<h1>Log</h1>`+db.t.map((t,i)=>`<div class="row"><button class="li" data-a="st" data-i="${i}"><b>${esc(t.n)}</b><div class="mu">${esc(t.x.map(e=>e.n).join(', '))}</div></button><button class="mu" data-a="dt" data-i="${i}">Delete</button></div>`).join('')+`<button class="b" data-a="st" data-i="-1">Start empty workout</button><p class="mu">Finish a workout, then choose Save as template to add it here.</p>`}
 function editor(){
- const x=ed.x.map((e,i)=>`<section><div class="row sp"><h2>${esc(e.n)}</h2><button class="mu" data-a="rx" data-i="${i}">Remove</button></div>`+e.s.map((s,j)=>{const l=last(e.n,ed.id),pv=l&&l[j]?`${l[j].w}×${l[j].r}`:'–';
-  return`<div class="s${s.d?' d':''}"><span class="n">${j+1}</span><span class="mu">${pv}</span><input inputmode="decimal" value="${s.w}" data-f="w" data-i="${i}" data-j="${j}" aria-label="Weight"><input inputmode="numeric" value="${s.r}" data-f="r" data-i="${i}" data-j="${j}" aria-label="Reps">`+(hist?`<button class="mu" data-a="xs" data-i="${i}" data-j="${j}" aria-label="Delete set">✕</button>`:`<button data-a="ck" data-i="${i}" data-j="${j}" aria-label="Mark done">${s.d?'✓':'○'}</button>`)+`</div>`}).join('')+`<button class="g" data-a="as" data-i="${i}">Add set</button></section>`).join('');
- return`<div class="row sp"><input data-f="name" value="${esc(ed.n)}" aria-label="Workout name">${hist?`<span class="mu">${ed.d.slice(0,10)}</span>`:`<span class="n" id="el"></span>`}</div>`+x+`<input id="nx" list="ex" placeholder="Exercise name"><datalist id="ex">${names().map(n=>`<option value="${esc(n)}">`).join('')}</datalist><button class="g" data-a="ax">Add exercise</button>`+
+ const x=ed.x.map((e,i)=>`<section><div class="row sp"><h2>${esc(e.n)}</h2><button class="mu" data-a="rx" data-i="${i}">Remove</button></div>`+`<div class="s h"><span>Set</span><span>Previous</span><span>Weight</span><span>Reps</span><span></span><span></span></div>`+e.s.map((s,j)=>{const l=last(e.n,ed.id),pv=l&&l[j]?`${l[j].w}×${l[j].r}`:'–';
+  return`<div class="s${s.d?' d':''}"><span class="n">${j+1}</span><span class="mu">${pv}</span><input inputmode="decimal" value="${s.w}" placeholder="${s.pw??''}" data-f="w" data-i="${i}" data-j="${j}" aria-label="Weight"><input inputmode="numeric" value="${s.r}" placeholder="${s.pr??''}" data-f="r" data-i="${i}" data-j="${j}" aria-label="Reps">`+(hist?`<span></span>`:`<button class="k" data-a="ck" data-i="${i}" data-j="${j}" aria-label="Mark done">${s.d?'✓':'○'}</button>`)+`<button class="mu" data-a="xs" data-i="${i}" data-j="${j}" aria-label="Remove set">✕</button></div>`}).join('')+`<button class="g" data-a="as" data-i="${i}">Add set</button></section>`).join('');
+ return`<div class="row sp"><input data-f="name" value="${esc(ed.n)}" aria-label="Workout name">${hist?`<span class="mu">${ed.d.slice(0,10)}</span>`:''}</div>`+x+`<input id="nx" list="ex" placeholder="Exercise name"><datalist id="ex">${names().map(n=>`<option value="${esc(n)}">`).join('')}</datalist><button class="g" data-a="ax">Add exercise</button>`+
  (hist?`<button class="b" data-a="hs">Save changes</button><button class="g" data-a="hd">Delete workout</button><button class="g" data-a="hc">Cancel</button>`:`<button class="b" data-a="fin">Finish workout</button><button class="g" data-a="tp">Save as template</button><button class="g" data-a="ds">Discard workout</button>`)}
 function histl(){return`<h1>History</h1>`+(ws().map(w=>`<button class="li" data-a="oh" data-id="${w.id}"><div class="row sp"><b>${esc(w.n)}</b><span class="mu">${w.d.slice(0,10)}</span></div><div class="mu">${w.x.length} exercises, ${w.x.reduce((a,e)=>a+e.s.length,0)} sets${w.u?', '+fmtDur(w.u):''}</div></button>`).join('')||'<p class="mu">No workouts yet. Import your Strong history on the Data tab, or log a workout.</p>')}
 function prog(){const ns=names();if(!ns.length)return'<h1>Progress</h1><p class="mu">Log or import workouts to see charts.</p>';
@@ -63,15 +63,15 @@ function render(){if(tab==='log'&&db.a){ed=db.a;hist=false}else if(tab!=='hist')
  $('#v').innerHTML=tab==='log'?(ed?editor():home()):tab==='hist'?(ed?editor():histl()):tab==='prog'?prog():data();
  $('#nav').innerHTML=[['log','Log'],['hist','History'],['prog','Progress'],['data','Data']].map(([k,l])=>`<button data-a="tab" data-k="${k}" class="${tab===k?'on':''}">${l}</button>`).join('')}
 document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const D=b.dataset,i=+D.i,j=+D.j,a=D.a,ps=()=>{if(!hist)save()};
- if(a==='ck'){const s=ed.x[i].s[j];s.d=!s.d;b.textContent=s.d?'✓':'○';b.parentNode.classList.toggle('d',s.d);ps();return}
+ if(a==='ck'){const s=ed.x[i].s[j];s.d=!s.d;if(s.d){if(s.w==='')s.w=s.pw??'';if(s.r==='')s.r=s.pr??'';const n=b.parentNode.querySelectorAll('input');n[0].value=s.w;n[1].value=s.r}b.textContent=s.d?'✓':'○';b.parentNode.classList.toggle('d',s.d);ps();return}
  if(a==='tab'){tab=D.k;ed=null;hist=false;msg=''}
  else if(a==='st')start(i>=0?db.t[i]:null);
  else if(a==='dt'){if(confirm('Delete this template?')){db.t.splice(i,1);save()}}
  else if(a==='rx'){ed.x.splice(i,1);ps()}
  else if(a==='xs'){ed.x[i].s.splice(j,1);ps()}
- else if(a==='as'){const s=ed.x[i].s,q=s[s.length-1]||{};s.push({w:q.w??'',r:q.r??'',d:false});ps()}
+ else if(a==='as'){const s=ed.x[i].s,q=s[s.length-1]||{};s.push({w:'',r:'',pw:q.w!==''&&q.w!=null?q.w:(q.pw??''),pr:q.r!==''&&q.r!=null?q.r:(q.pr??''),d:false});ps()}
  else if(a==='ax'){const v=$('#nx').value.trim();if(v){ed.x.push(mk(v));ps()}}
- else if(a==='fin'){const w=clean(ed);if(!w.x.length){alert('Mark at least one set done with ○ first.');return}const t=(Date.now()-ed.t0)/1000;w.u=t<21600?Math.round(t):null;db.w.push(w);db.a=null;ed=null;save()}
+ else if(a==='fin'){const w=clean(ed);if(!w.x.length){alert('Enter or tick at least one set first.');return}const t=(Date.now()-ed.t0)/1000;w.u=t<21600?Math.round(t):null;db.w.push(w);db.a=null;ed=null;save()}
  else if(a==='ds'){if(confirm('Discard this workout?')){db.a=null;ed=null;save()}else return}
  else if(a==='tp'){const n=prompt('Template name',ed.n);if(n){db.t.push({id:uid(),n,x:ed.x.map(e=>({n:e.n,k:e.s.length}))});save();alert('Template saved')}return}
  else if(a==='oh'){const w=db.w.find(w=>w.id===D.id);ed=JSON.parse(JSON.stringify(w));hist=true}
@@ -96,7 +96,6 @@ async function exp(){const q=v=>/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v,
  const f=new File([L.join('\n')],'lifts.csv',{type:'text/csv'});
  if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]})}catch(e){}return}
  const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download='lifts.csv';a.click()}
-setInterval(()=>{const e=$('#el');if(e&&ed&&!hist){const s=Math.floor((Date.now()-ed.t0)/1000);e.textContent=`${Math.floor(s/60)}:${p2(s%60)}`}},1000);
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
 render();
