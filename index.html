@@ -50,7 +50,7 @@ function home(){return`<h1>Log</h1>`+db.t.map((t,i)=>`<div class="row"><button c
 function editor(){
  const x=ed.x.map((e,i)=>`<section><div class="row sp"><h2>${esc(e.n)}</h2><button class="mu" data-a="rx" data-i="${i}">Remove</button></div>`+`<div class="s h"><span>Set</span><span>Previous</span><span>Weight</span><span>Reps</span><span>RIR</span><span></span><span></span></div>`+e.s.map((s,j)=>{const l=last(e.n,ed.id),pv=l&&l[j]?`${l[j].w}×${l[j].r}`:'–';
   return`<div class="s${s.d?' d':''}"><span class="n">${j+1}</span><span class="mu">${pv}</span><input inputmode="decimal" value="${s.w}" placeholder="${s.pw??''}" data-f="w" data-i="${i}" data-j="${j}" aria-label="Weight"><input inputmode="numeric" value="${s.r}" placeholder="${s.pr??''}" data-f="r" data-i="${i}" data-j="${j}" aria-label="Reps"><input inputmode="numeric" value="${s.i??''}" data-f="i" data-i="${i}" data-j="${j}" aria-label="Reps in reserve">`+(hist?`<span></span>`:`<button class="k" data-a="ck" data-i="${i}" data-j="${j}" aria-label="Mark done">${s.d?'✓':'○'}</button>`)+`<button class="mu" data-a="xs" data-i="${i}" data-j="${j}" aria-label="Remove set">✕</button></div>`}).join('')+`<button class="g" data-a="as" data-i="${i}">Add set</button></section>`).join('');
- return`<div class="row sp"><input data-f="name" value="${esc(ed.n)}" aria-label="Workout name">${hist?`<span class="mu">${ed.d.slice(0,10)}</span>`:''}</div>`+x+`<input id="nx" list="ex" placeholder="Exercise name"><datalist id="ex">${names().map(n=>`<option value="${esc(n)}">`).join('')}</datalist><button class="g" data-a="ax">Add exercise</button>`+
+ return`<div class="row sp"><input data-f="name" value="${esc(ed.n)}" aria-label="Workout name">${hist?`<span class="mu">${ed.d.slice(0,10)}</span>`:''}</div>`+x+`<select id="nx"><option value="">Add exercise...</option>${names().filter(n=>!ed.x.some(e=>e.n===n)).map(n=>`<option>${esc(n)}</option>`).join('')}<option value="__new">New exercise...</option></select>`+
  (hist?`<button class="b" data-a="hs">Save changes</button><button class="g" data-a="tp">Save as template</button><button class="g" data-a="hd">Delete workout</button><button class="g" data-a="hc">Cancel</button>`:`<button class="b" data-a="fin">Finish workout</button><button class="g" data-a="tp">Save as template</button><button class="g" data-a="ds">Discard workout</button>`)}
 const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 function histl(){let m='';return`<h1>History</h1>`+(ws().map(w=>{const k=w.d.slice(0,7),hd=k!==m?`<h2 class="mh">${MN[+k.slice(5)-1]} ${k.slice(0,4)}</h2>`:'';m=k;return hd+`<div class="sw"><button class="del" data-a="dh" data-id="${w.id}">Delete</button><button class="li sl" data-a="oh" data-id="${w.id}"><div class="row sp"><b>${esc(w.n)}</b><span class="mu">${w.d.slice(0,10)}</span></div><div class="mu">${esc(w.x.map(e=>e.n).join(', '))}</div></button></div>`}).join('')||'<p class="mu">No workouts yet. Import your Strong history on the Data tab, or log a workout.</p>')+(db.w.length?'<p class="mu">Swipe a workout left to delete it.</p>':'')}
@@ -78,12 +78,16 @@ function repSvg(){const now=Date.now(),sd=x=>stamp(new Date(now-x*864e5)),d0=sd(
  (db.b||[]).forEach(pl=>{const Z=pl.map(s=>sv(s,from)).filter(s=>s.pts.length),ch=Z.length&&chart(Z,c);if(!ch)return;body+=`<text x="12" y="${y+18}" font-size="14" font-weight="700">${esc([...new Set(pl.map(s=>s.n))].join(', ').slice(0,60))}</text><g transform="translate(0 ${y+26}) scale(1.5)">${ch.g}</g>`;y+=Math.round(40+ch.H*1.5)});
  if(!body)return null;
  return{H:y,svg:`<svg xmlns="http://www.w3.org/2000/svg" width="${R}" height="${y}" font-family="-apple-system,Helvetica,Arial,sans-serif" fill="#17222B"><rect width="${R}" height="${y}" fill="#fff"/><text x="12" y="38" font-size="24" font-weight="700">Weekly lifts report</text><text x="12" y="60" font-size="14" style="fill:${c.mu}">${d0.slice(0,10)} to ${stamp(new Date(now)).slice(0,10)}</text><text x="12" y="92" font-size="15">Workouts: ${a} (previous week ${b})</text>${body}</svg>`}}
+function ren(o,n){const f=e=>{if(e.n===o)e.n=n},g=p=>p.forEach(s=>{if(s.n===o)s.n=n}),dd=p=>p.filter((s,i,a)=>a.findIndex(t=>t.n===s.n&&t.m===s.m)===i);
+ db.w.forEach(w=>{w.x.forEach(f);const m=[];w.x.forEach(e=>{const k=m.find(y=>y.n===e.n);k?k.s.push(...e.s):m.push(e)});w.x=m});
+ db.t.forEach(t=>t.x.forEach(f));if(db.a)db.a.x.forEach(f);
+ g(db.pl);db.b.forEach(g);db.bt.forEach(t=>t.p.forEach(g));db.pl=dd(db.pl);db.b=db.b.map(dd);db.bt.forEach(t=>t.p=t.p.map(dd));if(px===o)px=n;save()}
 async function out(f){if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]})}catch(e){}return}const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()}
 async function rep(){const r=repSvg();if(!r){msg='Add at least one plot with data from the last 12 weeks to the batch first.';render();return}
  try{const im=new Image();await new Promise((ok,no)=>{im.onload=ok;im.onerror=no;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(r.svg)});
  const c=document.createElement('canvas');c.width=1020;c.height=r.H*2;c.getContext('2d').drawImage(im,0,0,1020,r.H*2);
  const b=await new Promise(ok=>c.toBlob(ok,'image/png'));await out(new File([b],'weekly-lifts-report.png',{type:'image/png'}))}catch(e){msg='Could not build the report.';render()}}
-function data(){return`<h1>Data</h1><p class="mu">${db.w.length} workouts stored on this phone.</p><label class="b btn">Import Strong CSV<input type="file" id="f" accept=".csv,text/csv" hidden></label><button class="g" data-a="ex">Export CSV (also your backup)</button><p class="mu">Weight unit (label only, used on charts)</p><select data-f="u">${['lb','kg'].map(u=>`<option${u===U()?' selected':''}>${u}</option>`).join('')}</select><p>${esc(msg)}</p>`}
+function data(){return`<h1>Data</h1><p class="mu">${db.w.length} workouts stored on this phone.</p><label class="b btn">Import Strong CSV<input type="file" id="f" accept=".csv,text/csv" hidden></label><button class="g" data-a="ex">Export CSV (also your backup)</button><p class="mu">Weight unit (label only, used on charts)</p><select data-f="u">${['lb','kg'].map(u=>`<option${u===U()?' selected':''}>${u}</option>`).join('')}</select><h2 style="margin-top:28px">Exercise names</h2><p class="mu">Tap an exercise to rename it everywhere: past workouts, templates, and saved plots. Renaming to a name you already use merges the two.</p>${names().map(n=>`<button class="li" data-a="rn" data-n="${esc(n)}"><b>${esc(n)}</b> <span class="mu">${db.w.filter(w=>w.x.some(e=>e.n===n)).length} workouts</span></button>`).join('')}<p>${esc(msg)}</p>`}
 function render(){if(tab==='log'&&db.a){ed=db.a;hist=false}else if(tab!=='hist')ed=null;
  $('#v').innerHTML=tab==='log'?(ed?editor():home()):tab==='hist'?(ed?editor():histl()):tab==='prog'?prog():data();
  $('#nav').innerHTML=[['log','Log'],['hist','History'],['prog','Progress'],['data','Data']].map(([k,l])=>`<button data-a="tab" data-k="${k}" class="${tab===k?'on':''}">${l}</button>`).join('')}
@@ -95,7 +99,6 @@ document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-a]
  else if(a==='rx'){ed.x.splice(i,1);ps()}
  else if(a==='xs'){ed.x[i].s.splice(j,1);ps()}
  else if(a==='as'){const s=ed.x[i].s,q=s[s.length-1]||{};s.push({w:'',r:'',i:'',pw:q.w!==''&&q.w!=null?q.w:(q.pw??''),pr:q.r!==''&&q.r!=null?q.r:(q.pr??''),d:false});ps()}
- else if(a==='ax'){const v=$('#nx').value.trim();if(v){ed.x.push(mk(v));ps()}}
  else if(a==='fin'){const w=clean(ed);if(!w.x.length){alert('Enter or tick at least one set first.');return}const t=(Date.now()-ed.t0)/1000;w.u=t<21600?Math.round(t):null;db.w.push(w);db.a=null;ed=null;save()}
  else if(a==='ds'){if(confirm('Discard this workout?')){db.a=null;ed=null;save()}else return}
  else if(a==='tp'){const n=prompt('Template name',ed.n);if(n){db.t.push({id:uid(),n,x:ed.x.map(e=>({n:e.n,k:e.s.length}))});save();alert('Template saved')}return}
@@ -113,6 +116,7 @@ document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-a]
  else if(a==='bt'){const n=(db.b||[]).length&&prompt('Template name','Weekly report');if(n){(db.bt=db.bt||[]).push({id:uid(),n,p:JSON.parse(JSON.stringify(db.b))});save()}}
  else if(a==='tl'){db.b=JSON.parse(JSON.stringify(db.bt[i].p));msg='Loaded template.';save()}
  else if(a==='td'){db.bt.splice(i,1);save()}
+ else if(a==='rn'){const o=D.n,v=(prompt('Rename "'+o+'" to',o)||'').trim();if(!v||v===o)return;const x=names().find(n=>n!==o&&n.toLowerCase()===v.toLowerCase());if(x&&!confirm('Merge into your existing "'+x+'"?'))return;ren(o,x||v);msg='Renamed to "'+(x||v)+'".'}
  else if(a==='hc'){ed=null;hist=false}
  else if(a==='ex'){await exp();return}
  render()});
@@ -120,6 +124,7 @@ document.addEventListener('input',ev=>{const t=ev.target,f=t.dataset.f;if(!f||!e
 document.addEventListener('change',async ev=>{const t=ev.target,f=t.dataset.f;
  if(f==='px'||f==='pm'){if(f==='px')px=t.value;else pm=t.value;render()}
  if(f==='u'){db.u=t.value;save();render()}
+ if(t.id==='nx'&&t.value&&ed){let v=t.value;if(v==='__new'){v=(prompt('New exercise name')||'').trim();const x=names().find(n=>n.toLowerCase()===v.toLowerCase());if(x)v=x}if(v&&!ed.x.some(e=>e.n===v)){ed.x.push(mk(v));if(!hist)save()}render()}
  if(t.id==='f'&&t.files[0]){msg=imp(await t.files[0].text());render()}});
 function csv(t){const r=[];let a=[],c='',q=0;for(let i=0;i<t.length;i++){const h=t[i];if(q){if(h==='"'){if(t[i+1]==='"'){c+='"';i++}else q=0}else c+=h}else if(h==='"')q=1;else if(h===','){a.push(c);c=''}else if(h==='\n'||h==='\r'){if(h==='\r'&&t[i+1]==='\n')i++;a.push(c);c='';r.push(a);a=[]}else c+=h}if(c||a.length){a.push(c);r.push(a)}return r}
 function dur(s){if(!s)return null;const g=r=>+((s.match(r)||[])[1]||0),t=g(/(\d+)h/)*3600+g(/(\d+)m/)*60+g(/(\d+)s/);return t&&t<21600?t:null}
