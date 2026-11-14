@@ -28,13 +28,14 @@ nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--sf);bor
 nav button{flex:1;padding:15px 0;border-radius:0}nav .on{color:var(--ac);font-weight:700}
 .sw{position:relative;overflow:hidden;border-bottom:1px solid var(--ln)}.sw .li{border-bottom:0;position:relative;transition:transform .15s}.del{position:absolute;right:0;top:0;bottom:0;width:90px;background:#B3261E;color:#fff;font-weight:600;border-radius:0}.ck{display:flex;align-items:center;padding:12px;background:var(--sf);border-bottom:1px solid var(--ln)}input[type=checkbox]{width:auto;margin:0 12px 0 0}
 .mh{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:22px 0 6px}
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;z-index:20;background:var(--bg);overflow:auto;padding-top:env(safe-area-inset-top)}.ovi{max-width:560px;margin:auto;padding:12px 16px 40px}
 </style></head><body><main id="v"></main><nav id="nav"></nav>
 <script>
 const K='wt1',$=s=>document.querySelector(s);
 let db;try{db=JSON.parse(localStorage.getItem(K))}catch(e){}
-db=db||{w:[],t:[],a:null};
-const ok=p=>p.filter(s=>s.n!=='*');db.pl=ok(db.pl||[]);db.b=(db.b||[]).map(ok).filter(p=>p.length);db.bt=(db.bt||[]).map(t=>({...t,p:t.p.map(ok).filter(p=>p.length)}));
-let tab='log',ed=null,hist=false,msg='',px='',pm='e';
+db=db||{w:[],t:[],a:null};db.bw=db.bw||[];
+delete db.pl;delete db.b;delete db.bt;db.pp=(db.pp||[]).map(p=>p||[]);db.pn=db.pn||3;
+let pe=null,tab='log',ed=null,hist=false,msg='',px='',pm='e';
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(db))}catch(e){alert('Could not save. Export a backup from the Data tab.')}};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const p2=n=>String(n).padStart(2,'0'),uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -54,46 +55,54 @@ function editor(){
  (hist?`<button class="b" data-a="hs">Save changes</button><button class="g" data-a="tp">Save as template</button><button class="g" data-a="hd">Delete workout</button><button class="g" data-a="hc">Cancel</button>`:`<button class="b" data-a="fin">Finish workout</button><button class="g" data-a="tp">Save as template</button><button class="g" data-a="ds">Discard workout</button>`)}
 const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
 function histl(){let m='';return`<h1>History</h1>`+(ws().map(w=>{const k=w.d.slice(0,7),hd=k!==m?`<h2 class="mh">${MN[+k.slice(5)-1]} ${k.slice(0,4)}</h2>`:'';m=k;return hd+`<div class="sw"><button class="del" data-a="dh" data-id="${w.id}">Delete</button><button class="li sl" data-a="oh" data-id="${w.id}"><div class="row sp"><b>${esc(w.n)}</b><span class="mu">${w.d.slice(0,10)}</span></div><div class="mu">${esc(w.x.map(e=>e.n).join(', '))}</div></button></div>`}).join('')||'<p class="mu">No workouts yet. Import your Strong history on the Data tab, or log a workout.</p>')+(db.w.length?'<p class="mu">Swipe a workout left to delete it.</p>':'')}
-const U=()=>db.u||'lb',ML=()=>({e:`Est. 1RM (${U()})`,v:`Volume (${U()} × reps)`,t:`Top weight (${U()})`,r:'Best set (reps)'}),SH={e:'1RM',v:'Volume',t:'Top weight',r:'Best reps'},UN=()=>({e:U(),t:U(),v:U()+' × reps',r:'reps'}),PAL=['#2F7DE1','#E8890C','#1FA971','#C9439B','#7A5AF8'],tms=d=>new Date(d.replace(' ','T')).getTime();
+const U=()=>db.u||'lb',ML=()=>({e:`Est. 1RM (${U()})`,v:`Volume (${U()} × reps)`,t:`Top weight (${U()})`,r:'Best set (reps)',b:`Body weight (${U()})`}),SH={e:'1RM',v:'Volume',t:'Top weight',r:'Best reps',b:'Body weight'},UN=()=>({e:U(),t:U(),v:U()+' × reps',r:'reps',b:U()}),PAL=['#2F7DE1','#E8890C','#1FA971','#C9439B','#7A5AF8'],tms=d=>new Date(d.replace(' ','T')).getTime();
 function pts(n,from){return ws().reverse().filter(w=>!from||w.d>=from).map(w=>{const e=w.x.find(e=>e.n===n);if(!e)return null;const s=e.s;return{d:w.d,e:Math.round(Math.max(0,...s.map(t=>t.w*(1+t.r/30)))),v:s.reduce((a,t)=>a+t.w*t.r,0),t:Math.max(...s.map(t=>t.w)),r:Math.max(...s.map(t=>t.r))}}).filter(Boolean)}
 function sv(s,from){let m=s.m;const q=pts(s.n,from);if(m==='e'&&!q.some(p=>p.e>0))m='r';const P=q.map(p=>({d:p.d,y:p[m]}));return{name:(s.n+': '+SH[m]).slice(0,48),m,u:UN()[m],pts:P.map(p=>({...p,t:tms(p.d)}))}}
 function chart(S,c){const us=[...new Set(S.map(s=>s.u))];if(us.length>2)return null;
- const W=340,L=56,T=16,B=228,two=us.length>1,R=two?W-56:W-14,all=S.flatMap(s=>s.pts),t0=Math.min(...all.map(p=>p.t)),t1=Math.max(...all.map(p=>p.t)),X=t=>t1>t0?L+(t-t0)/(t1-t0)*(R-L):(L+R)/2,
+ const W=340,L=56,T=12,B=124,two=us.length>1,R=two?W-56:W-14,all=S.flatMap(s=>s.pts),t0=Math.min(...all.map(p=>p.t)),t1=Math.max(...all.map(p=>p.t)),X=t=>t1>t0?L+(t-t0)/(t1-t0)*(R-L):(L+R)/2,
  ax=us.map(u=>{const g=S.filter(s=>s.u===u),v=g.flatMap(s=>s.pts.map(p=>p.y)),lo=Math.min(...v),hi=Math.max(...v);return{lo,hi,Y:y=>hi===lo?(T+B)/2:B-(y-lo)/(hi-lo)*(B-T),tk:hi===lo?[lo]:[lo,(lo+hi)/2,hi],t:g.every(s=>s.m===g[0].m)?ML()[g[0].m]:(u===U()?`Weight (${U()})`:ML()[g[0].m])}}),f=v=>v>=100?Math.round(v):+v.toFixed(1),d=t=>stamp(new Date(t)).slice(5,10);
  let o=`<g style="fill:${c.mu}" font-size="11">`;
  ax.forEach((a,i)=>{a.tk.forEach(v=>{if(!i)o+=`<line x1="${L}" x2="${R}" y1="${a.Y(v)}" y2="${a.Y(v)}" style="stroke:${c.ln}"/>`;o+=`<text x="${i?R+6:L-6}" y="${a.Y(v)+4}" text-anchor="${i?'start':'end'}">${f(v)}</text>`});o+=`<text transform="translate(${i?W-6:12} ${(T+B)/2}) rotate(-90)" text-anchor="middle">${esc(a.t)}</text>`});
- o+=`<line x1="${L}" x2="${L}" y1="${T}" y2="${B}" style="stroke:${c.mu}"/><line x1="${L}" x2="${R}" y1="${B}" y2="${B}" style="stroke:${c.mu}"/>`+(two?`<line x1="${R}" x2="${R}" y1="${T}" y2="${B}" style="stroke:${c.mu}"/>`:'')+`<text x="${L}" y="${B+16}">${d(t0)}</text><text x="${R}" y="${B+16}" text-anchor="end">${d(t1)}</text><text x="${(L+R)/2}" y="${B+36}" text-anchor="middle">Date</text></g>`;
+ o+=`<line x1="${L}" x2="${L}" y1="${T}" y2="${B}" style="stroke:${c.mu}"/><line x1="${L}" x2="${R}" y1="${B}" y2="${B}" style="stroke:${c.mu}"/>`+(two?`<line x1="${R}" x2="${R}" y1="${T}" y2="${B}" style="stroke:${c.mu}"/>`:'')+`<text x="${L}" y="${B+16}">${d(t0)}</text><text x="${R}" y="${B+16}" text-anchor="end">${d(t1)}</text><text x="${(L+R)/2}" y="${B+34}" text-anchor="middle">Date</text></g>`;
  S.forEach((s,k)=>{const j=us.indexOf(s.u),a=ax[j],col=PAL[k%5],da=j?' stroke-dasharray="5 3"':'';
-  o+=`<polyline points="${s.pts.map(p=>X(p.t).toFixed(1)+','+a.Y(p.y).toFixed(1)).join(' ')}" fill="none" stroke-width="2.5" stroke="${col}"${da}/>`+s.pts.map(p=>`<circle cx="${X(p.t).toFixed(1)}" cy="${a.Y(p.y).toFixed(1)}" r="3" fill="${col}"/>`).join('')+`<line x1="${L}" x2="${L+18}" y1="${B+52+k*16}" y2="${B+52+k*16}" stroke="${col}" stroke-width="2.5"${da}/><text x="${L+24}" y="${B+56+k*16}" font-size="11" style="fill:${c.mu}">${esc(s.name)}${j?' (right axis)':''}</text>`});
- return{g:o,H:B+64+S.length*16}}
-const cur=()=>db.pl&&db.pl.length?db.pl:[{n:px,m:pm}];
+  o+=`<polyline points="${s.pts.map(p=>X(p.t).toFixed(1)+','+a.Y(p.y).toFixed(1)).join(' ')}" fill="none" stroke-width="2.5" stroke="${col}"${da}/>`+s.pts.map(p=>`<circle cx="${X(p.t).toFixed(1)}" cy="${a.Y(p.y).toFixed(1)}" r="3" fill="${col}"/>`).join('')+`<line x1="${L}" x2="${L+18}" y1="${B+48+k*14}" y2="${B+48+k*14}" stroke="${col}" stroke-width="2.5"${da}/><text x="${L+24}" y="${B+52+k*14}" font-size="11" style="fill:${c.mu}">${esc(s.name)}${j?' (right axis)':''}</text>`});
+ return{g:o,H:B+56+S.length*14}}
+function plotCard(i){const sr=db.pp[i]||[],S=sr.map(s=>sv(s)).filter(s=>s.pts.length),ch=S.length?chart(S,{mu:'var(--mu)',ln:'var(--ln)'}):null;
+ return`<section><div class="row sp"><h2>Plot ${i+1}</h2><button class="g" style="width:auto;margin:0" data-a="ps" data-i="${i}">Select data</button></div>`+(ch?`<svg viewBox="0 0 340 ${ch.H}" width="100%" role="img" aria-label="Plot ${i+1}" font-size="11">${ch.g}</svg>`:`<p class="mu">${sr.length?(S.length?'A plot can show at most two different units.':'No data for this selection.'):'No data selected.'}</p>`)+`</section>`}
+function panel(ns){const M=ML();return`<div class="ov"><div class="ovi"><h1>Select data</h1><p class="mu">Plot ${pe.i+1}. Choose an exercise and metric, tap Add line, and repeat for more lines (up to 5, at most two units). Nothing changes until you tap Apply.</p><select data-f="px">${ns.map(x=>`<option${x===px?' selected':''}>${esc(x)}</option>`).join('')}</select><select data-f="pm">${['e','v','t','r'].map(m=>`<option value="${m}"${m===pm?' selected':''}>${esc(M[m])}</option>`).join('')}</select><button class="g" data-a="sa">Add line</button>`+pe.d.map((s,i)=>`<div class="ck"><span style="flex:1">${esc(sv(s).name)}</span><button class="mu" data-a="sx" data-i="${i}" aria-label="Remove line">✕</button></div>`).join('')+`<p>${esc(msg)}</p><button class="b" data-a="pok">Apply</button><button class="g" data-a="sc">Clear plot</button><button class="g" data-a="pcx">Cancel</button></div></div>`}
 function prog(){const ns=names();if(!ns.length)return'<h1>Progress</h1><p class="mu">Log or import workouts to see charts.</p>';
- px=ns.includes(px)?px:ns[0];
- const S=cur().map(s=>sv(s)).filter(s=>s.pts.length),ch=S.length?chart(S,{mu:'var(--mu)',ln:'var(--ln)'}):null,m0=new Date();m0.setHours(0,0,0,0);m0.setDate(m0.getDate()-(m0.getDay()+6)%7);const n=db.w.filter(w=>w.d>=stamp(m0)).length;
- return`<h1>Progress</h1><p class="mu">This week: ${n} workout${n==1?'':'s'}</p><select data-f="px">${ns.map(x=>`<option${x===px?' selected':''}>${esc(x)}</option>`).join('')}</select><select data-f="pm">${['e','v','t','r'].map(m=>`<option value="${m}"${m===pm?' selected':''}>${esc(ML()[m])}</option>`).join('')}</select><div class="row"><button class="g" data-a="sa">Add line to plot</button><button class="g" data-a="sc">Clear plot</button></div>`+(db.pl||[]).map((s,i)=>`<div class="ck"><span style="flex:1">${esc(sv(s).name)}</span><button class="mu" data-a="sx" data-i="${i}">✕</button></div>`).join('')+
- (ch?`<svg viewBox="0 0 340 ${ch.H}" width="100%" role="img" aria-label="Progress chart" font-size="11">${ch.g}</svg>`:`<p class="mu">${S.length?'A plot can show at most two different units. Remove a line.':'No data for this selection.'}</p>`)+
- `<button class="b" data-a="ba">Add this plot to the report batch</button><h2 style="margin-top:28px">Report batch</h2><p class="mu">Build plots above and add each one here, then share them as one image. The batch stays saved, so you can reuse it weekly.</p>`+((db.b||[]).map((p,i)=>`<div class="ck"><span style="flex:1">${esc(p.map(s=>sv(s).name).join(', ').slice(0,80))}</span><button class="mu" data-a="bx" data-i="${i}">✕</button></div>`).join('')||'<p class="mu">No plots in the batch yet.</p>')+`<button class="b" data-a="rp">Share report</button><button class="g" data-a="bc">Clear batch</button><button class="g" data-a="bt">Save batch as template</button>`+(db.bt||[]).map((t,i)=>`<div class="row"><button class="li" data-a="tl" data-i="${i}"><b>${esc(t.n)}</b> <span class="mu">${t.p.length} plots, tap to load</span></button><button class="mu" data-a="td" data-i="${i}">✕</button></div>`).join('')+`<p>${esc(msg)}</p>`}
+ px=ns.includes(px)?px:ns[0];const m0=new Date();m0.setHours(0,0,0,0);m0.setDate(m0.getDate()-(m0.getDay()+6)%7);const n=db.w.filter(w=>w.d>=stamp(m0)).length;
+ return`<h1>Progress</h1><p class="mu">This week: ${n} workout${n==1?'':'s'}</p><div class="row sp"><span>Plots shown</span><select data-f="pn" style="width:auto">${[1,2,3,4,5,6].map(k=>`<option${k===db.pn?' selected':''}>${k}</option>`).join('')}</select></div>`+Array.from({length:db.pn},(_,i)=>plotCard(i)).join('')+`<button class="b" data-a="rp">Export plots</button><p>${esc(pe?'':msg)}</p>`+(pe?panel(ns):'')}
 function repSvg(){const now=Date.now(),sd=x=>stamp(new Date(now-x*864e5)),d0=sd(7),d1=sd(14),from=sd(84),R=510,c={mu:'#66737d',ln:'#d3d9dd'};
  const Q=(a,b)=>db.w.filter(w=>w.d>=a&&(!b||w.d<b)).length,a=Q(d0),b=Q(d1,d0);let y=116,body='';
- (db.b||[]).forEach(pl=>{const Z=pl.map(s=>sv(s,from)).filter(s=>s.pts.length),ch=Z.length&&chart(Z,c);if(!ch)return;body+=`<text x="12" y="${y+18}" font-size="14" font-weight="700">${esc([...new Set(pl.map(s=>s.n))].join(', ').slice(0,60))}</text><g transform="translate(0 ${y+26}) scale(1.5)">${ch.g}</g>`;y+=Math.round(40+ch.H*1.5)});
+ db.pp.slice(0,db.pn).forEach(pl=>{const Z=pl.map(s=>sv(s,from)).filter(s=>s.pts.length),ch=Z.length&&chart(Z,c);if(!ch)return;body+=`<text x="12" y="${y+18}" font-size="14" font-weight="700">${esc([...new Set(pl.map(s=>s.n))].join(', ').slice(0,60))}</text><g transform="translate(0 ${y+26}) scale(1.5)">${ch.g}</g>`;y+=Math.round(40+ch.H*1.5)});
  if(!body)return null;
  return{H:y,svg:`<svg xmlns="http://www.w3.org/2000/svg" width="${R}" height="${y}" font-family="-apple-system,Helvetica,Arial,sans-serif" fill="#17222B"><rect width="${R}" height="${y}" fill="#fff"/><text x="12" y="38" font-size="24" font-weight="700">Weekly lifts report</text><text x="12" y="60" font-size="14" style="fill:${c.mu}">${d0.slice(0,10)} to ${stamp(new Date(now)).slice(0,10)}</text><text x="12" y="92" font-size="15">Workouts: ${a} (previous week ${b})</text>${body}</svg>`}}
 function ren(o,n){const f=e=>{if(e.n===o)e.n=n},g=p=>p.forEach(s=>{if(s.n===o)s.n=n}),dd=p=>p.filter((s,i,a)=>a.findIndex(t=>t.n===s.n&&t.m===s.m)===i);
  db.w.forEach(w=>{w.x.forEach(f);const m=[];w.x.forEach(e=>{const k=m.find(y=>y.n===e.n);k?k.s.push(...e.s):m.push(e)});w.x=m});
  db.t.forEach(t=>t.x.forEach(f));if(db.a)db.a.x.forEach(f);
- g(db.pl);db.b.forEach(g);db.bt.forEach(t=>t.p.forEach(g));db.pl=dd(db.pl);db.b=db.b.map(dd);db.bt.forEach(t=>t.p=t.p.map(dd));if(px===o)px=n;save()}
+ db.pp.forEach(g);db.pp=db.pp.map(dd);if(px===o)px=n;save()}
+let bwr=0;
+const bws=()=>[...db.bw].sort((a,b)=>a.d.localeCompare(b.d)),T0=d=>tms(d+' 00:00:00');
+function bwset(d,v){const e=db.bw.find(x=>x.d===d);e?e.v=v:db.bw.push({d,v})}
+function bwt(){const all=bws(),lt=all[all.length-1],from=bwr?stamp(new Date(Date.now()-bwr*864e5)).slice(0,10):'',P=all.filter(e=>e.d>=from).map(e=>({d:e.d+' 00:00:00',y:e.v,t:T0(e.d)})),
+ avg=t=>{const w=all.filter(e=>T0(e.d)<=t&&T0(e.d)>t-6.5*864e5);return Math.round(w.reduce((a,e)=>a+e.v,0)/w.length*10)/10};
+ let body='<p class="mu">No weigh-ins yet.</p>';
+ if(lt){const S=[{name:'Body weight',m:'b',u:U(),pts:P}];if(P.length>2)S.push({name:'7-day average',m:'b',u:U(),pts:P.map(p=>({...p,y:avg(p.t)}))});
+  body=`<p>Latest: <b>${lt.v} ${U()}</b> on ${lt.d}. 7-day average: <b>${avg(T0(lt.d))} ${U()}</b>.</p><select data-f="bwr">${[[28,'Last 4 weeks'],[84,'Last 12 weeks'],[365,'Last year'],[0,'All']].map(([v,l])=>`<option value="${v}"${v===bwr?' selected':''}>${l}</option>`).join('')}</select>`+(P.length?`<svg viewBox="0 0 340 ${chart(S,{mu:'var(--mu)',ln:'var(--ln)'}).H}" width="100%" role="img" aria-label="Body weight chart" font-size="11">${chart(S,{mu:'var(--mu)',ln:'var(--ln)'}).g}</svg>`:'<p class="mu">No weigh-ins in this range.</p>')+`<h2 style="margin-top:24px">Entries</h2>`+all.slice().reverse().slice(0,30).map(e=>`<div class="ck"><span style="flex:1"><b>${e.v}</b> ${U()}</span><span class="mu">${e.d}</span><button class="mu" data-a="bxd" data-d="${e.d}" aria-label="Remove entry">✕</button></div>`).join('')+(all.length>30?'<p class="mu">Showing the latest 30 entries.</p>':'')}
+ return`<h1>Weight</h1><div class="row"><input type="date" id="bd" value="${stamp(new Date()).slice(0,10)}" aria-label="Date"><input inputmode="decimal" id="bv" placeholder="${lt?lt.v:'Weight'}" aria-label="Body weight"></div><button class="b" data-a="bs">Save weigh-in</button><p class="mu">Saving on a date that already has an entry replaces it.</p><p>${esc(msg)}</p>`+body}
 async function out(f){if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]})}catch(e){}return}const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()}
-async function rep(){const r=repSvg();if(!r){msg='Add at least one plot with data from the last 12 weeks to the batch first.';render();return}
+async function rep(){const r=repSvg();if(!r){msg='Select data for at least one plot first (it needs data from the last 12 weeks).';render();return}
  try{const im=new Image();await new Promise((ok,no)=>{im.onload=ok;im.onerror=no;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(r.svg)});
  const c=document.createElement('canvas');c.width=1020;c.height=r.H*2;c.getContext('2d').drawImage(im,0,0,1020,r.H*2);
  const b=await new Promise(ok=>c.toBlob(ok,'image/png'));await out(new File([b],'weekly-lifts-report.png',{type:'image/png'}))}catch(e){msg='Could not build the report.';render()}}
-function data(){return`<h1>Data</h1><p class="mu">${db.w.length} workouts stored on this phone.</p><label class="b btn">Import Strong CSV<input type="file" id="f" accept=".csv,text/csv" hidden></label><button class="g" data-a="ex">Export CSV (also your backup)</button><p class="mu">Weight unit (label only, used on charts)</p><select data-f="u">${['lb','kg'].map(u=>`<option${u===U()?' selected':''}>${u}</option>`).join('')}</select><h2 style="margin-top:28px">Exercise names</h2><p class="mu">Tap an exercise to rename it everywhere: past workouts, templates, and saved plots. Renaming to a name you already use merges the two.</p>${names().map(n=>`<button class="li" data-a="rn" data-n="${esc(n)}"><b>${esc(n)}</b> <span class="mu">${db.w.filter(w=>w.x.some(e=>e.n===n)).length} workouts</span></button>`).join('')}<p>${esc(msg)}</p>`}
+function data(){return`<h1>Data</h1><p class="mu">${db.w.length} workouts stored on this phone.</p><label class="b btn">Import CSV (Strong or body weight)<input type="file" id="f" accept=".csv,text/csv" hidden></label><button class="g" data-a="ex">Export workouts CSV (also your backup)</button><button class="g" data-a="exw">Export body weight CSV (also your backup)</button><p class="mu">Weight unit (label only, used on charts)</p><select data-f="u">${['lb','kg'].map(u=>`<option${u===U()?' selected':''}>${u}</option>`).join('')}</select><h2 style="margin-top:28px">Exercise names</h2><p class="mu">Tap an exercise to rename it everywhere: past workouts, templates, and saved plots. Renaming to a name you already use merges the two.</p>${names().map(n=>`<button class="li" data-a="rn" data-n="${esc(n)}"><b>${esc(n)}</b> <span class="mu">${db.w.filter(w=>w.x.some(e=>e.n===n)).length} workouts</span></button>`).join('')}<p>${esc(msg)}</p>`}
 function render(){if(tab==='log'&&db.a){ed=db.a;hist=false}else if(tab!=='hist')ed=null;
- $('#v').innerHTML=tab==='log'?(ed?editor():home()):tab==='hist'?(ed?editor():histl()):tab==='prog'?prog():data();
- $('#nav').innerHTML=[['log','Log'],['hist','History'],['prog','Progress'],['data','Data']].map(([k,l])=>`<button data-a="tab" data-k="${k}" class="${tab===k?'on':''}">${l}</button>`).join('')}
+ $('#v').innerHTML=tab==='log'?(ed?editor():home()):tab==='hist'?(ed?editor():histl()):tab==='prog'?prog():tab==='bw'?bwt():data();
+ $('#nav').innerHTML=[['log','Log'],['hist','History'],['prog','Progress'],['bw','Weight'],['data','Data']].map(([k,l])=>`<button data-a="tab" data-k="${k}" class="${tab===k?'on':''}">${l}</button>`).join('')}
 document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-a]');if(!b)return;const D=b.dataset,i=+D.i,j=+D.j,a=D.a,ps=()=>{if(!hist)save()};
  if(a==='ck'){const s=ed.x[i].s[j];s.d=!s.d;if(s.d){if(s.w==='')s.w=s.pw??'';if(s.r==='')s.r=s.pr??'';const n=b.parentNode.querySelectorAll('input');n[0].value=s.w;n[1].value=s.r}b.textContent=s.d?'✓':'○';b.parentNode.classList.toggle('d',s.d);ps();return}
- if(a==='tab'){tab=D.k;ed=null;hist=false;msg=''}
+ if(a==='tab'){tab=D.k;ed=null;hist=false;pe=null;msg=''}
  else if(a==='st')start(i>=0?db.t[i]:null);
  else if(a==='dt'){if(confirm('Delete this template?')){db.t.splice(i,1);save()}}
  else if(a==='rx'){ed.x.splice(i,1);ps()}
@@ -107,28 +116,31 @@ document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-a]
  else if(a==='hd'){if(confirm('Delete this workout?')){db.w=db.w.filter(w=>w.id!==ed.id);ed=null;hist=false;save()}else return}
  else if(a==='dh'){db.w=db.w.filter(w=>w.id!==D.id);save()}
  else if(a==='rp'){await rep();return}
- else if(a==='sa'){db.pl=db.pl||[];const s={n:px,m:pm};if(!db.pl.some(x=>x.n===s.n&&x.m===s.m)){if(db.pl.length>=5)msg='Up to 5 lines per plot.';else db.pl.push(s)}save()}
- else if(a==='sx'){db.pl.splice(i,1);save()}
- else if(a==='sc'){db.pl=[];save()}
- else if(a==='ba'){(db.b=db.b||[]).push(JSON.parse(JSON.stringify(cur())));msg='Added to the batch.';save()}
- else if(a==='bx'){db.b.splice(i,1);save()}
- else if(a==='bc'){db.b=[];save()}
- else if(a==='bt'){const n=(db.b||[]).length&&prompt('Template name','Weekly report');if(n){(db.bt=db.bt||[]).push({id:uid(),n,p:JSON.parse(JSON.stringify(db.b))});save()}}
- else if(a==='tl'){db.b=JSON.parse(JSON.stringify(db.bt[i].p));msg='Loaded template.';save()}
- else if(a==='td'){db.bt.splice(i,1);save()}
+ else if(a==='ps'){pe={i,d:JSON.parse(JSON.stringify(db.pp[i]||[]))};msg=''}
+ else if(a==='sa'){const s={n:px,m:pm};if(!pe.d.some(x=>x.n===s.n&&x.m===s.m)){if(pe.d.length>=5)msg='Up to 5 lines per plot.';else if(new Set([...pe.d,s].map(x=>UN()[x.m])).size>2)msg='A plot can show at most two different units.';else{pe.d.push(s);msg=''}}}
+ else if(a==='sx'){pe.d.splice(i,1)}
+ else if(a==='sc'){pe.d=[]}
+ else if(a==='pok'){while(db.pp.length<=pe.i)db.pp.push([]);db.pp[pe.i]=pe.d;pe=null;msg='';save()}
+ else if(a==='pcx'){pe=null;msg=''}
  else if(a==='rn'){const o=D.n,v=(prompt('Rename "'+o+'" to',o)||'').trim();if(!v||v===o)return;const x=names().find(n=>n!==o&&n.toLowerCase()===v.toLowerCase());if(x&&!confirm('Merge into your existing "'+x+'"?'))return;ren(o,x||v);msg='Renamed to "'+(x||v)+'".'}
  else if(a==='hc'){ed=null;hist=false}
  else if(a==='ex'){await exp();return}
+ else if(a==='exw'){await out(new File(['Date,Body Weight\n'+bws().map(e=>e.d+','+e.v).join('\n')],'body-weight.csv',{type:'text/csv'}));return}
+ else if(a==='bs'){const d=$('#bd').value,v=parseFloat($('#bv').value);if(!d||!(v>0))msg='Enter a date and a weight.';else{bwset(d,v);save();msg='Saved '+v+' '+U()+' for '+d+'.'}}
+ else if(a==='bxd'){db.bw=db.bw.filter(e=>e.d!==D.d);save()}
  render()});
 document.addEventListener('input',ev=>{const t=ev.target,f=t.dataset.f;if(!f||!ed)return;if(f==='name')ed.n=t.value;else ed.x[+t.dataset.i].s[+t.dataset.j][f]=t.value;if(!hist)save()});
 document.addEventListener('change',async ev=>{const t=ev.target,f=t.dataset.f;
  if(f==='px'||f==='pm'){if(f==='px')px=t.value;else pm=t.value;render()}
  if(f==='u'){db.u=t.value;save();render()}
+ if(f==='bwr'){bwr=+t.value;render()}
+ if(f==='pn'){db.pn=+t.value;save();render()}
  if(t.id==='nx'&&t.value&&ed){let v=t.value;if(v==='__new'){v=(prompt('New exercise name')||'').trim();const x=names().find(n=>n.toLowerCase()===v.toLowerCase());if(x)v=x}if(v&&!ed.x.some(e=>e.n===v)){ed.x.push(mk(v));if(!hist)save()}render()}
  if(t.id==='f'&&t.files[0]){msg=imp(await t.files[0].text());render()}});
 function csv(t){const r=[];let a=[],c='',q=0;for(let i=0;i<t.length;i++){const h=t[i];if(q){if(h==='"'){if(t[i+1]==='"'){c+='"';i++}else q=0}else c+=h}else if(h==='"')q=1;else if(h===','){a.push(c);c=''}else if(h==='\n'||h==='\r'){if(h==='\r'&&t[i+1]==='\n')i++;a.push(c);c='';r.push(a);a=[]}else c+=h}if(c||a.length){a.push(c);r.push(a)}return r}
 function dur(s){if(!s)return null;const g=r=>+((s.match(r)||[])[1]||0),t=g(/(\d+)h/)*3600+g(/(\d+)m/)*60+g(/(\d+)s/);return t&&t<21600?t:null}
 function imp(t){const r=csv(t.replace(/^\uFEFF/,'')),h=r.shift().map(s=>s.trim()),ix=n=>h.indexOf(n),need=['Date','Exercise Name','Weight','Reps'].filter(n=>ix(n)<0);
+ if(h.includes('Body Weight')){let n=0;r.forEach(a=>{const v=parseFloat(a[h.indexOf('Body Weight')]),d=(a[0]||'').slice(0,10);if(d&&v>0){bwset(d,v);n++}});save();return`Imported ${n} body weight entries.`}
  if(need.length)return'This does not look like a Strong export. Missing columns: '+need.join(', ');
  const m=new Map();r.forEach(a=>{const d=a[ix('Date')];if(!d||a.length<h.length)return;let w=m.get(d);if(!w){w={id:uid(),d,n:a[ix('Workout Name')]||'Workout',u:dur(a[ix('Duration')]),x:[]};m.set(d,w)}
   const en=a[ix('Exercise Name')];let e=w.x.find(e=>e.n===en);if(!e){e={n:en,s:[]};w.x.push(e)}const rp=parseFloat(a[ix('RPE')]),q={w:+a[ix('Weight')]||0,r:+a[ix('Reps')]||0};if(rp>0)q.i=Math.max(0,10-rp);e.s.push(q)});
