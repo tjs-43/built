@@ -5,8 +5,8 @@
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
 <title>Lifts</title>
 <style>
-:root{--bg:#EDEDED;--sf:#fff;--ink:#111;--mu:#6B6B6B;--ln:#D6D6D6;--ac:#111;--ok:#111;--okbg:#DCDCDC}
-@media(prefers-color-scheme:dark){:root{--bg:#0D0D0D;--sf:#1A1A1A;--ink:#F2F2F2;--mu:#9B9B9B;--ln:#2E2E2E;--ac:#F2F2F2;--ok:#F2F2F2;--okbg:#2B2B2B}}
+:root{--bg:#EDEDED;--sf:#fff;--ink:#111;--mu:#6B6B6B;--ln:#D6D6D6;--ac:#111;--ok:#111;--okbg:#DCDCDC;--bb:#111;--li:#B8B8B8;--lm:#3A3A3A}
+@media(prefers-color-scheme:dark){:root{--bg:#0D0D0D;--sf:#1A1A1A;--ink:#F2F2F2;--mu:#9B9B9B;--ln:#2E2E2E;--ac:#F2F2F2;--ok:#F2F2F2;--okbg:#2B2B2B;--bb:#B8B8B8;--li:#1A1A1A;--lm:#9B9B9B}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,sans-serif;padding-top:env(safe-area-inset-top)}
 main{padding:12px 16px 120px;max-width:560px;margin:auto}
@@ -15,9 +15,9 @@ h2{font-size:18px;margin:0}
 section{margin-bottom:22px}
 .row{display:flex;align-items:center;gap:8px}.sp{justify-content:space-between}
 button,.btn{font:inherit;color:inherit;background:none;border:0;padding:11px 12px;border-radius:8px;text-align:center}
-.b{background:var(--ac);color:var(--bg);font-weight:600;display:block;width:100%;margin:8px 0}
+.b{background:var(--bb);color:var(--bg);font-weight:600;display:block;width:100%;margin:8px 0}
 .g{border:1px solid var(--ln);width:100%;margin:6px 0;display:block}
-.li{display:block;width:100%;text-align:left;background:var(--sf);border-bottom:1px solid var(--ln);padding:14px 12px}
+.li{display:block;width:100%;text-align:left;background:var(--li);border-bottom:1px solid var(--ln);padding:14px 12px}
 input,select{font:inherit;color:inherit;background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:10px;width:100%;margin:4px 0}
 .s{display:grid;grid-template-columns:26px 1fr 66px 54px 48px 34px 34px;gap:4px;align-items:center;padding:4px 2px;border-radius:8px}
 .s.d{background:var(--okbg)}.s.d .k{color:var(--ok)}.h{font-size:13px;color:var(--mu);text-align:center}.h span:nth-child(2){text-align:left}.s button{padding:10px 0}
@@ -29,7 +29,8 @@ nav button{flex:0 0 auto;padding:15px 10px;border-radius:0}nav .on{color:var(--a
 .sw{position:relative;overflow:hidden;border-bottom:1px solid var(--ln)}.sw .li{border-bottom:0;position:relative;transition:transform .15s}.del{position:absolute;right:0;top:0;bottom:0;width:90px;background:#B3261E;color:#fff;font-weight:600;border-radius:0}.ck{display:flex;align-items:center;padding:12px;background:var(--sf);border-bottom:1px solid var(--ln)}input[type=checkbox]{width:auto;margin:0 12px 0 0}
 .mh{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:22px 0 6px}
 .ov{position:fixed;top:0;left:0;right:0;bottom:0;z-index:20;background:var(--bg);overflow:auto;padding-top:env(safe-area-inset-top)}.ovi{max-width:560px;margin:auto;padding:12px 16px 40px}
-.hd{margin:6px 0 20px}.hd h1{font:800 42px/1 "Avenir Next Condensed","Arial Narrow",sans-serif;letter-spacing:.01em;text-transform:uppercase;margin:4px 0 0}.hd h1::after{content:"";display:block;width:44px;height:5px;background:var(--ink);margin-top:12px}.eb{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mu)}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:6px 0 20px;padding-bottom:10px;border-bottom:4px solid var(--ink)}.hd h1{font:800 40px/1 "Avenir Next Condensed","Arial Narrow",sans-serif;letter-spacing:.01em;text-transform:uppercase;margin:0}.eb{font-size:11px;letter-spacing:.1em;line-height:1.3;text-transform:uppercase;color:var(--mu);text-align:right;padding-bottom:2px}
+.li .mu{color:var(--lm)}
 </style></head><body><main id="v"></main><nav id="nav"></nav>
 <script>
 const K='wt1',$=s=>document.querySelector(s);
@@ -48,7 +49,7 @@ const last=(n,id)=>{for(const w of ws()){if(w.id===id)continue;const e=w.x.find(
 function mk(n,k){const l=last(n);k=k||(l?l.length:3);return{n,s:Array.from({length:k},(_,i)=>{const q=l?(l[i]||l[l.length-1]):{};return{w:'',r:'',i:'',pw:q.w??'',pr:q.r??'',d:false}})}}
 function start(t){ed=db.a={id:uid(),d:stamp(new Date()),n:t?t.n:'Workout',t0:Date.now(),x:t?t.x.map(e=>mk(e.n,e.k)):[]};hist=false;save()}
 function clean(w){return{id:w.id,d:w.d,n:w.n||'Workout',u:w.u??null,x:w.x.map(e=>({n:e.n,s:e.s.filter(s=>hist||s.d||s.w!==''||s.r!==''||(s.i??'')!=='').map(s=>{const o={w:parseFloat(s.w!==''?s.w:s.pw)||0,r:parseFloat(s.r!==''?s.r:s.pr)||0},i=parseFloat(s.i);if((s.i??'')!==''&&!isNaN(i))o.i=i;return o}).filter(s=>s.r>0||s.w>0)})).filter(e=>e.s.length)}}
-const hd=(t,s='')=>`<header class="hd"><div class="eb">${s}</div><h1>${t}</h1></header>`,SPANS=[[28,'Last 4 weeks'],[84,'Last 12 weeks'],[365,'Last year'],[0,'All']],spanFrom=()=>db.pr?stamp(new Date(Date.now()-db.pr*864e5)).slice(0,10):'';
+const hd=(t,s='')=>`<header class="hd"><h1>${t}</h1><div class="eb">${s}</div></header>`,SPANS=[[28,'Last 4 weeks'],[84,'Last 12 weeks'],[365,'Last year'],[0,'All']],spanFrom=()=>db.pr?stamp(new Date(Date.now()-db.pr*864e5)).slice(0,10):'';
 function home(){return hd('Log',new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}))+db.t.map((t,i)=>`<div class="sw"><button class="del" data-a="dt" data-i="${i}">Delete</button><button class="li sl" data-a="st" data-i="${i}"><b>${esc(t.n)}</b><div class="mu">${esc(t.x.map(e=>e.n).join(', '))}</div></button></div>`).join('')+`<button class="b" data-a="st" data-i="-1">Start empty workout</button><p class="mu">Finish a workout, then choose Save as template to add it here.${db.t.length?' Swipe a template left to delete it.':''}</p>`}
 function editor(){
  const x=ed.x.map((e,i)=>`<section><div class="row sp"><h2>${esc(e.n)}</h2><button class="mu" data-a="rx" data-i="${i}">Remove</button></div>`+`<div class="s h"><span>Set</span><span>Previous</span><span>Weight</span><span>Reps</span><span>RIR</span><span></span><span></span></div>`+e.s.map((s,j)=>{const l=last(e.n,ed.id),pv=l&&l[j]?`${l[j].w}×${l[j].r}`:'–';
@@ -99,7 +100,7 @@ async function rep(){const r=repSvg();if(!r){msg='Select data for at least one p
  try{const im=new Image();await new Promise((ok,no)=>{im.onload=ok;im.onerror=no;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(r.svg)});
  const c=document.createElement('canvas');c.width=1020;c.height=r.H*2;c.getContext('2d').drawImage(im,0,0,1020,r.H*2);
  const b=await new Promise(ok=>c.toBlob(ok,'image/png'));await out(new File([b],'weekly-lifts-report.png',{type:'image/png'}))}catch(e){msg='Could not build the report.';render()}}
-function data(){return hd('Data',db.w.length+' workouts stored on this phone')+`<label class="b btn">Import CSV (Strong or body weight)<input type="file" id="f" accept=".csv,text/csv" hidden></label><button class="g" data-a="ex">Export workouts CSV (also your backup)</button><button class="g" data-a="exw">Export body weight CSV (also your backup)</button><p class="mu">Weight unit (label only, used on charts)</p><select data-f="u">${['lb','kg'].map(u=>`<option${u===U()?' selected':''}>${u}</option>`).join('')}</select><h2 style="margin-top:28px">Exercise names</h2><p class="mu">Tap an exercise to rename it everywhere: past workouts, templates, and saved plots. Renaming to a name you already use merges the two.</p>${names().map(n=>`<button class="li" data-a="rn" data-n="${esc(n)}"><b>${esc(n)}</b> <span class="mu">${db.w.filter(w=>w.x.some(e=>e.n===n)).length} workouts</span></button>`).join('')}<p>${esc(msg)}</p>`}
+function data(){return hd('Data',db.w.length+' workouts stored')+`<label class="b btn">Import CSV (Strong or body weight)<input type="file" id="f" accept=".csv,text/csv" hidden></label><button class="g" data-a="ex">Export workouts CSV (also your backup)</button><button class="g" data-a="exw">Export body weight CSV (also your backup)</button><p class="mu">Weight unit (label only, used on charts)</p><select data-f="u">${['lb','kg'].map(u=>`<option${u===U()?' selected':''}>${u}</option>`).join('')}</select><h2 style="margin-top:28px">Exercise names</h2><p class="mu">Tap an exercise to rename it everywhere: past workouts, templates, and saved plots. Renaming to a name you already use merges the two.</p>${names().map(n=>`<button class="li" data-a="rn" data-n="${esc(n)}"><b>${esc(n)}</b> <span class="mu">${db.w.filter(w=>w.x.some(e=>e.n===n)).length} workouts</span></button>`).join('')}<p>${esc(msg)}</p>`}
 function render(){if(tab==='log'&&db.a){ed=db.a;hist=false}else if(tab!=='hist')ed=null;
  $('#v').innerHTML=tab==='log'?(ed?editor():home()):tab==='hist'?(ed?editor():histl()):tab==='prog'?prog():tab==='bw'?bwt():data();
  $('#nav').innerHTML=[['log','Log'],['hist','History'],['prog','Progress'],['bw','Weight'],['data','Data']].map(([k,l])=>`<button data-a="tab" data-k="${k}" class="${tab===k?'on':''}">${l}</button>`).join('')}
