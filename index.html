@@ -42,8 +42,8 @@ nav button{flex:0 0 auto;padding:15px 10px;border-radius:0}nav .on{color:var(--a
 const K='wt1',$=s=>document.querySelector(s);
 let db;try{db=JSON.parse(localStorage.getItem(K))}catch(e){}
 db=db||{w:[],t:[],a:null};db.bw=db.bw||[];
-delete db.pl;delete db.b;delete db.bt;db.pp=(db.pp||[]).map(p=>p||[]);db.pn=db.pn||3;db.pr=db.pr||0;db.pt=db.pt||[];db.ps=db.ps||[];
-let og=0,pv=null,pe=null,tab='log',ed=null,hist=false,msg='',px='',pm='e';
+delete db.pl;delete db.b;delete db.bt;db.ps=db.ps||[];db.pr=db.pr||0;{const pp=(db.pp||[]).map((s,i)=>({t:(db.pt||[])[i]||'',s:s||[]})).slice(0,db.pn||3).filter(q=>q.s.length);if(pp.length)db.ps.push({id:Date.now().toString(36),n:'Previous plots',p:pp})}delete db.pp;delete db.pn;delete db.pt;
+let bd=null,pv=null,pe=null,tab='log',ed=null,hist=false,msg='',px='',pm='e';
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(db))}catch(e){alert('Could not save. Export a backup from the Data tab.')}};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const p2=n=>String(n).padStart(2,'0'),uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -57,11 +57,7 @@ function mk(n,k){const l=last(n);k=k||(l?l.length:3);return{n,s:Array.from({leng
 function start(t){ed=db.a={id:uid(),d:stamp(new Date()),n:t?t.n:'Workout',t0:Date.now(),x:t?t.x.map(e=>mk(e.n,e.k)):[]};hist=false;save()}
 function clean(w){return{id:w.id,d:w.d,n:w.n||'Workout',u:w.u??null,x:w.x.map(e=>({n:e.n,s:e.s.filter(s=>hist||s.d||s.w!==''||s.r!==''||(s.i??'')!=='').map(s=>{const o={w:parseFloat(s.w!==''?s.w:s.pw)||0,r:parseFloat(s.r!==''?s.r:s.pr)||0},i=parseFloat(s.i);if((s.i??'')!==''&&!isNaN(i))o.i=i;return o}).filter(s=>s.r>0||s.w>0)})).filter(e=>e.s.length)}}
 const hd=(t,s='')=>`<header class="hd"><h1>${t}</h1><div class="eb">${s}</div></header>`,SPANS=[[28,'Last 4 weeks'],[84,'Last 12 weeks'],[365,'Last year'],[0,'All']],spanFrom=()=>db.pr?stamp(new Date(Date.now()-db.pr*864e5)).slice(0,10):'';
-const grps=()=>[...new Set(db.t.map(t=>t.g).filter(Boolean))].sort(),
-trow=(t,i)=>`<div class="sw"><button class="del" data-a="dt" data-i="${i}">Delete</button><button class="er sl" data-a="st" data-i="${i}"><b>${esc(t.n)}</b><div class="mu">${esc(t.x.map(e=>e.n).join(', '))}</div></button></div>`;
-function orgPanel(){const G=grps();return`<div class="ov"><div class="ovi">${hd('Organize','Templates')}<p class="mu">Put each template in a group, such as Chest/Tri. Choose New group... to make one. A group with no templates disappears.</p>`+db.t.map((t,i)=>`<div class="ck"><span style="flex:1;min-width:0"><b>${esc(t.n)}</b></span><select data-f="tg" data-i="${i}" style="width:150px;margin:0"><option value="__none"${t.g?'':' selected'}>No group</option>${G.map(g=>`<option${t.g===g?' selected':''}>${esc(g)}</option>`).join('')}<option value="__new">New group...</option></select></div>`).join('')+`<button class="b" data-a="oc">Done</button></div></div>`}
-function home(){const T=db.t.map((t,i)=>[t,i]),body=db.t.length?T.filter(([t])=>!t.g).map(([t,i])=>trow(t,i)).join('')+grps().map(g=>`<h3 class="mh">${esc(g)}</h3>`+T.filter(([t])=>t.g===g).map(([t,i])=>trow(t,i)).join('')).join('')+'<p class="mu">Swipe a template left to delete it.</p><button class="g" data-a="og">Organize templates</button>':'<p class="mu">No templates yet. Finish a workout and choose Save as template to add one.</p>';
- return hd('Log',new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}))+`<section class="xc"><h2>Templates</h2>${body}</section><button class="b" data-a="st" data-i="-1">Start empty workout</button>`+(og?orgPanel():'')}
+function home(){return hd('Log',new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}))+`<section class="xc"><h2>Templates</h2>`+(db.t.length?db.t.map((t,i)=>`<div class="sw"><button class="del" data-a="dt" data-i="${i}">Delete</button><button class="er sl" data-a="st" data-i="${i}"><b>${esc(t.n)}</b><div class="mu">${esc(t.x.map(e=>e.n).join(', '))}</div></button></div>`).join('')+'<p class="mu">Swipe a template left to delete it.</p>':'<p class="mu">No templates yet. Finish a workout and choose Save as template to add one.</p>')+`</section><button class="b" data-a="st" data-i="-1">Start empty workout</button>`}
 function editor(){
  const x=ed.x.map((e,i)=>`<div class="sw xw" data-drag="x" data-i="${i}"><button class="del" data-a="rx" data-i="${i}">Delete</button><section class="xc sl"><h2>${esc(e.n)}</h2>`+`<div class="s h"><span>Set</span><span>Previous</span><span>Weight</span><span>Reps</span><span>RIR</span><span></span></div>`+e.s.map((s,j)=>{const l=last(e.n,ed.id),pv=l&&l[j]?`${l[j].w}×${l[j].r}`:'–';
   return`<div class="sw st"><button class="del" data-a="xs" data-i="${i}" data-j="${j}">Delete</button><div class="s sl${s.d?' d':''}"><span class="n">${j+1}</span><span class="mu">${pv}</span><input inputmode="decimal" value="${s.w}" placeholder="${s.pw??''}" data-f="w" data-i="${i}" data-j="${j}" aria-label="Weight"><input inputmode="numeric" value="${s.r}" placeholder="${s.pr??''}" data-f="r" data-i="${i}" data-j="${j}" aria-label="Reps"><input inputmode="numeric" value="${s.i??''}" data-f="i" data-i="${i}" data-j="${j}" aria-label="Reps in reserve">`+(hist?`<span></span>`:`<button class="k" data-a="ck" data-i="${i}" data-j="${j}" aria-label="Mark done">${s.d?'✓':'○'}</button>`)+`</div></div>`}).join('')+`<button class="g" data-a="as" data-i="${i}">Add set</button></section></div>`).join('');
@@ -81,25 +77,21 @@ function chart(S,c,nl){const us=[...new Set(S.map(s=>s.u))];if(us.length>2)retur
  S.forEach((s,k)=>{const j=us.indexOf(s.u),a=ax[j],col=PAL[k%5],da=j?' stroke-dasharray="5 3"':'';
   o+=`<polyline points="${s.pts.map(p=>X(p.t).toFixed(1)+','+a.Y(p.y).toFixed(1)).join(' ')}" fill="none" stroke-width="2.5" stroke="${col}"${da}/>`+s.pts.map(p=>`<circle cx="${X(p.t).toFixed(1)}" cy="${a.Y(p.y).toFixed(1)}" r="3" fill="${col}"/>`).join('')+(nl?'':`<line x1="${L}" x2="${L+18}" y1="${B+48+k*14}" y2="${B+48+k*14}" stroke="${col}" stroke-width="2.5"${da}/><text x="${L+24}" y="${B+52+k*14}" font-size="11" style="fill:${c.mu}">${esc(s.name)}${j?' (right axis)':''}</text>`)});
  return{g:o,H:nl?B+42:B+56+S.length*14}}
-const ptitle=i=>db.pt[i]||[...new Set((db.pp[i]||[]).map(s=>s.n))].join(', ')||'Plot '+(i+1);
-function pcard(sr,title,i){const S=sr.map(s=>sv(s,spanFrom())).filter(s=>s.pts.length),ch=S.length?chart(S,{mu:'var(--mu)',ln:'var(--ln)'}):null,pg=i!=null;
- return`<section class="xc"${pg?` data-drag="p" data-i="${i}"`:''}><div class="row sp" style="margin-bottom:10px"><h2 style="flex:1;min-width:0">${esc(title)}</h2>${pg?`<button class="g" style="width:auto;margin:0" data-a="ps" data-i="${i}">Select data</button>`:''}</div>`+(ch?`<svg viewBox="0 0 340 ${ch.H}" width="100%" role="img" aria-label="${esc(title)}" font-size="11">${ch.g}</svg>`:`<p class="mu">${sr.length?(S.length?'A plot can show at most two different units.':'No data for this selection in this time span.'):'No data selected.'}</p>`)+`</section>`}
-const plotCard=i=>pcard(db.pp[i]||[],ptitle(i),i),
-setsCard=()=>`<section class="xc"><h2>Plot sets</h2>`+(db.ps.length?db.ps.map((s,i)=>`<div class="sw"><button class="del" data-a="psd" data-i="${i}">Delete</button><button class="er sl" data-a="pso" data-i="${i}"><b>${esc(s.n)}</b><div class="mu">${s.p.length} plot${s.p.length==1?'':'s'}</div></button></div>`).join('')+'<p class="mu">Tap a set to review it. Swipe a set left to delete it.</p>':'<p class="mu">No plot sets yet. Build your plots below, then tap Create plot set.</p>')+`</section>`;
-function setView(){const s=db.ps[pv];return`<div class="ov"><div class="ovi">${hd(s.n,s.p.length+' plot'+(s.p.length==1?'':'s'))}`+s.p.map(q=>pcard(q.s,q.t||[...new Set(q.s.map(x=>x.n))].join(', ')||'Plot')).join('')+`<button class="b" data-a="psl">Load into plots</button><button class="g" data-a="psx">Close</button></div></div>`}
+const qtitle=q=>q.t||[...new Set(q.s.map(x=>x.n))].join(', ')||'Plot';
+function pcard(sr,title,i){const S=sr.map(s=>sv(s,spanFrom())).filter(s=>s.pts.length),ch=S.length?chart(S,{mu:'var(--mu)',ln:'var(--ln)'}):null,pg=i!=null,
+ sec=`<section class="xc${pg?' sl':''}"><div class="row sp" style="margin-bottom:10px"><h2 style="flex:1;min-width:0">${esc(title)}</h2>${pg?`<button class="g" style="width:auto;margin:0" data-a="ps" data-i="${i}">Select data</button>`:''}</div>`+(ch?`<svg viewBox="0 0 340 ${ch.H}" width="100%" role="img" aria-label="${esc(title)}" font-size="11">${ch.g}</svg>`:`<p class="mu">${sr.length?(S.length?'A plot can show at most two different units.':'No data for this selection in this time span.'):'No data selected.'}</p>`)+`</section>`;
+ return pg?`<div class="sw xw" data-drag="p" data-i="${i}"><button class="del" data-a="bpx" data-i="${i}">Delete</button>${sec}</div>`:sec}
+const setsCard=()=>`<section class="xc"><h2>Plot sets</h2>`+(db.ps.length?db.ps.map((s,i)=>`<div class="sw"><button class="del" data-a="psd" data-i="${i}">Delete</button><button class="er sl" data-a="pso" data-i="${i}"><b>${esc(s.n)}</b><div class="mu">${s.p.length} plot${s.p.length==1?'':'s'}</div></button></div>`).join('')+'<p class="mu">Tap a set to review it. Swipe a set left to delete it.</p>':'<p class="mu">No plot sets yet. Tap Create plot set to make one.</p>')+`</section>`;
+function setView(){const s=db.ps[pv];return`<div class="ov"><div class="ovi">${hd(s.n,s.p.length+' plot'+(s.p.length==1?'':'s'))}<div class="row sp"><span>Time span</span><select data-f="pr" style="width:auto">${SPANS.map(([v,l])=>`<option value="${v}"${v===db.pr?' selected':''}>${l}</option>`).join('')}</select></div>`+s.p.map(q=>pcard(q.s,qtitle(q))).join('')+`<button class="b" data-a="pse">Edit plot set</button><button class="g" data-a="psx">Close</button></div></div>`}
+function builder(){return`<div class="ov"><div class="ovi">${hd(bd.i>=0?'Edit plot set':'New plot set','')}<input data-f="bn" value="${esc(bd.n)}" placeholder="Plot set name" aria-label="Plot set name">`+bd.p.map((q,i)=>pcard(q.s,qtitle(q),i)).join('')+(bd.p.length?'<p class="mu">Hold and drag a plot to reorder it. Swipe a plot left to delete it.</p>':'<p class="mu">Add the plots you want to review before the gym.</p>')+`<button class="g" data-a="bpa">Add plot</button>${msg?`<p><b>${esc(msg)}</b></p>`:''}<button class="b" data-a="bsv">Save plot set</button><button class="g" data-a="bcx">Cancel</button></div></div>`}
 function panel(ns){const M=ML();return`<div class="ov"><div class="ovi">${hd('Select data','Plot '+(pe.i+1))}<input data-f="pt" value="${esc(pe.t||'')}" placeholder="Plot name (optional, defaults to the exercise)" aria-label="Plot name"><p class="mu">Choose an exercise and metric, tap Add line, and repeat for more lines (up to 5, at most two units). Nothing changes until you tap Apply.</p><select data-f="px">${ns.map(x=>`<option${x===px?' selected':''}>${esc(x)}</option>`).join('')}</select><select data-f="pm">${['e','v','t','r'].map(m=>`<option value="${m}"${m===pm?' selected':''}>${esc(M[m])}</option>`).join('')}</select><button class="g" data-a="sa">Add line</button>`+pe.d.map((s,i)=>`<div class="sw"><button class="del" data-a="sx" data-i="${i}">Delete</button><div class="li sl">${esc(sv(s).name)}</div></div>`).join('')+(pe.d.length?'<p class="mu">Swipe a line left to delete it.</p>':'')+`<p>${esc(msg)}</p><button class="b" data-a="pok">Apply</button><button class="g" data-a="sc">Clear plot</button><button class="g" data-a="pcx">Cancel</button></div></div>`}
 function prog(){const ns=names();if(!ns.length)return hd('Progress')+'<p class="mu">Log or import workouts to see charts.</p>';
  px=ns.includes(px)?px:ns[0];const m0=new Date();m0.setHours(0,0,0,0);m0.setDate(m0.getDate()-(m0.getDay()+6)%7);const n=db.w.filter(w=>w.d>=stamp(m0)).length;
- return hd('Progress',`This week: ${n} workout${n==1?'':'s'}`)+(msg&&!pe?`<p><b>${esc(msg)}</b></p>`:'')+setsCard()+`<section class="xc"><h2>View</h2><div class="row sp"><span>Time span</span><select data-f="pr" style="width:auto">${SPANS.map(([v,l])=>`<option value="${v}"${v===db.pr?' selected':''}>${l}</option>`).join('')}</select></div><div class="row sp"><span>Plots shown</span><select data-f="pn" style="width:auto">${[1,2,3,4,5,6].map(k=>`<option${k===db.pn?' selected':''}>${k}</option>`).join('')}</select></div></section>`+Array.from({length:db.pn},(_,i)=>plotCard(i)).join('')+`<button class="b" data-a="rp">Export plots</button><button class="g" data-a="cs">Create plot set</button>`+(pe?panel(ns):'')+(pv!==null&&db.ps[pv]?setView():'')}
-function repSvg(){const now=Date.now(),sd=x=>stamp(new Date(now-x*864e5)),d0=sd(7),d1=sd(14),from=db.pr?sd(db.pr):'',R=510,c={mu:'#6B6B6B',ln:'#D6D6D6'};
- const Q=(a,b)=>db.w.filter(w=>w.d>=a&&(!b||w.d<b)).length,a=Q(d0),b=Q(d1,d0);let y=116,body='';
- db.pp.slice(0,db.pn).forEach((pl,pi)=>{const Z=pl.map(s=>sv(s,from)).filter(s=>s.pts.length),ch=Z.length&&chart(Z,c);if(!ch)return;body+=`<text x="12" y="${y+18}" font-size="14" font-weight="700">${esc(ptitle(pi).slice(0,60))}</text><g transform="translate(0 ${y+26}) scale(1.5)">${ch.g}</g>`;y+=Math.round(40+ch.H*1.5)});
- if(!body)return null;
- return{H:y,svg:`<svg xmlns="http://www.w3.org/2000/svg" width="${R}" height="${y}" font-family="-apple-system,Helvetica,Arial,sans-serif" fill="#111111"><rect width="${R}" height="${y}" fill="#fff"/><text x="12" y="38" font-size="24" font-weight="700">Weekly lifts report</text><text x="12" y="60" font-size="14" style="fill:${c.mu}">${d0.slice(0,10)} to ${stamp(new Date(now)).slice(0,10)}</text><text x="12" y="92" font-size="15">Workouts: ${a} (previous week ${b})</text>${body}</svg>`}}
+ return hd('Progress',`This week: ${n} workout${n==1?'':'s'}`)+(msg&&!bd&&pv===null?`<p><b>${esc(msg)}</b></p>`:'')+setsCard()+`<button class="b" data-a="bn">Create plot set</button>`+(bd?builder():'')+(pe?panel(ns):'')+(pv!==null&&db.ps[pv]?setView():'')}
 function ren(o,n){const f=e=>{if(e.n===o)e.n=n},g=p=>p.forEach(s=>{if(s.n===o)s.n=n}),dd=p=>p.filter((s,i,a)=>a.findIndex(t=>t.n===s.n&&t.m===s.m)===i);
  db.w.forEach(w=>{w.x.forEach(f);const m=[];w.x.forEach(e=>{const k=m.find(y=>y.n===e.n);k?k.s.push(...e.s):m.push(e)});w.x=m});
  db.t.forEach(t=>t.x.forEach(f));if(db.a)db.a.x.forEach(f);
- db.pp.forEach(g);db.pp=db.pp.map(dd);db.ps.forEach(s=>s.p.forEach(q=>{g(q.s);q.s=dd(q.s)}));if(px===o)px=n;save()}
+ db.ps.forEach(s=>s.p.forEach(q=>{g(q.s);q.s=dd(q.s)}));if(px===o)px=n;save()}
 let bwr=0;
 const bws=()=>[...db.bw].sort((a,b)=>a.d.localeCompare(b.d)),T0=d=>tms(d+' 00:00:00');
 function bwset(d,v){const e=db.bw.find(x=>x.d===d);e?e.v=v:db.bw.push({d,v})}
@@ -111,17 +103,13 @@ function bwt(){const all=bws(),lt=all[all.length-1],from=bwr?stamp(new Date(Date
   list=`<section class="xc"><h2>Entries</h2>`+all.slice().reverse().slice(0,30).map(e=>`<div class="sw"><button class="del" data-a="bxd" data-d="${e.d}">Delete</button><div class="er sl"><div class="row sp"><span><b>${e.v}</b> ${U()}</span><span class="mu">${e.d}</span></div></div></div>`).join('')+`<p class="mu">Swipe an entry left to delete it.${all.length>30?' Showing the latest 30.':''}</p></section>`}
  return hd('Weight',all.length+' weigh-in'+(all.length==1?'':'s'))+`<section class="xc"><h2>Trend</h2>${top}</section><section class="xc"><h2>Log weight</h2><div class="row"><input type="date" id="bd" value="${stamp(new Date()).slice(0,10)}" aria-label="Date"><input inputmode="decimal" id="bv" placeholder="${lt?lt.v:'Weight'}" aria-label="Body weight"></div><button class="b" data-a="bs">Save weigh-in</button><p class="mu">Saving on a date that already has an entry replaces it.</p>${msg?`<p><b>${esc(msg)}</b></p>`:''}</section>`+list}
 async function out(f){if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]})}catch(e){}return}const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()}
-async function rep(){const r=repSvg();if(!r){msg='Select data for at least one plot first (it needs data in the selected time span).';render();return}
- try{const im=new Image();await new Promise((ok,no)=>{im.onload=ok;im.onerror=no;im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(r.svg)});
- const c=document.createElement('canvas');c.width=1020;c.height=r.H*2;c.getContext('2d').drawImage(im,0,0,1020,r.H*2);
- const b=await new Promise(ok=>c.toBlob(ok,'image/png'));await out(new File([b],'weekly-lifts-report.png',{type:'image/png'}))}catch(e){msg='Could not build the report.';render()}}
 function data(){return hd('Data',db.w.length+' workouts stored')+(msg?`<p><b>${esc(msg)}</b></p>`:'')+`<section class="xc"><h2>Import and export</h2><label class="b btn">Import CSV<input type="file" id="f" accept=".csv,text/csv" hidden></label><button class="g" data-a="ex">Export workouts CSV</button><button class="g" data-a="exw">Export body weight CSV</button><p class="mu">Exports double as backups. Import accepts Strong exports and body weight files.</p></section><section class="xc"><h2>Exercise names</h2><p class="mu">Tap an exercise to rename it everywhere: past workouts, templates, and saved plots. Renaming to a name you already use merges the two.</p>${names().map(n=>`<button class="er" data-a="rn" data-n="${esc(n)}"><b>${esc(n)}</b> <span class="mu">${db.w.filter(w=>w.x.some(e=>e.n===n)).length} workouts</span></button>`).join('')}</section>`}
 function render(){if(tab==='log'&&db.a){ed=db.a;hist=false}else if(tab!=='hist')ed=null;
  $('#v').innerHTML=tab==='log'?(ed?editor():home()):tab==='hist'?(ed?editor():histl()):tab==='prog'?prog():tab==='bw'?bwt():data();
  $('#nav').innerHTML=[['log','Log'],['hist','History'],['prog','Progress'],['bw','Weight'],['data','Data']].map(([k,l])=>`<button data-a="tab" data-k="${k}" class="${tab===k?'on':''}">${l}</button>`).join('')}
 document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-a]');if(!b||Date.now()-dsup<500)return;if(b.classList.contains('sl')){if(Date.now()-sup<400)return;if(b.classList.contains('o')){b.style.transform='';b.classList.remove('o');b.parentNode.classList.remove('dr');return}}const D=b.dataset,i=+D.i,j=+D.j,a=D.a,ps=()=>{if(!hist)save()};
  if(a==='ck'){const s=ed.x[i].s[j];s.d=!s.d;if(s.d){if(s.w==='')s.w=s.pw??'';if(s.r==='')s.r=s.pr??'';const n=b.parentNode.querySelectorAll('input');n[0].value=s.w;n[1].value=s.r}b.textContent=s.d?'✓':'○';b.parentNode.classList.toggle('d',s.d);ps();return}
- if(a==='tab'){tab=D.k;ed=null;hist=false;pe=null;og=0;pv=null;msg=''}
+ if(a==='tab'){tab=D.k;ed=null;hist=false;pe=null;bd=null;pv=null;msg=''}
  else if(a==='st')start(i>=0?db.t[i]:null);
  else if(a==='dt'){db.t.splice(i,1);save()}
  else if(a==='rx'){const e=ed.x[i];if(e.s.some(s=>hist||s.d||s.w!==''||s.r!=='')&&!confirm('Delete this exercise and its sets?'))return;ed.x.splice(i,1);ps()}
@@ -134,35 +122,35 @@ document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-a]
  else if(a==='hs'){const w=clean(ed),k=db.w.findIndex(x=>x.id===w.id);db.w[k]=w;ed=null;hist=false;save()}
  else if(a==='hd'){if(confirm('Delete this workout?')){db.w=db.w.filter(w=>w.id!==ed.id);ed=null;hist=false;save()}else return}
  else if(a==='dh'){db.w=db.w.filter(w=>w.id!==D.id);save()}
- else if(a==='rp'){await rep();return}
- else if(a==='ps'){pe={i,d:JSON.parse(JSON.stringify(db.pp[i]||[])),t:db.pt[i]||''};msg=''}
+ 
+ else if(a==='ps'){pe={i,d:JSON.parse(JSON.stringify(bd.p[i].s)),t:bd.p[i].t||''};msg=''}
  else if(a==='sa'){const s={n:px,m:pm};if(!pe.d.some(x=>x.n===s.n&&x.m===s.m)){if(pe.d.length>=5)msg='Up to 5 lines per plot.';else if(new Set([...pe.d,s].map(x=>UN()[x.m])).size>2)msg='A plot can show at most two different units.';else{pe.d.push(s);msg=''}}}
  else if(a==='sx'){pe.d.splice(i,1)}
  else if(a==='sc'){pe.d=[]}
- else if(a==='pok'){while(db.pp.length<=pe.i)db.pp.push([]);db.pp[pe.i]=pe.d;db.pt[pe.i]=(pe.t||'').trim();pe=null;msg='';save()}
+ else if(a==='pok'){bd.p[pe.i]={t:(pe.t||'').trim(),s:pe.d};pe=null;msg=''}
  else if(a==='pcx'){pe=null;msg=''}
  else if(a==='rn'){const o=D.n,v=(prompt('Rename "'+o+'" to',o)||'').trim();if(!v||v===o)return;const x=names().find(n=>n!==o&&n.toLowerCase()===v.toLowerCase());if(x&&!confirm('Merge into your existing "'+x+'"?'))return;ren(o,x||v);msg='Renamed to "'+(x||v)+'".'}
- else if(a==='og'){og=1}
- else if(a==='oc'){og=0}
+ else if(a==='bn'){bd={i:-1,n:'',p:[]};msg=''}
+ else if(a==='bpa'){if(bd.p.length>=6)msg='Up to 6 plots per set.';else{bd.p.push({t:'',s:[]});pe={i:bd.p.length-1,d:[],t:''};msg=''}}
+ else if(a==='bpx'){bd.p.splice(i,1)}
+ else if(a==='bcx'){bd=null;msg=''}
+ else if(a==='bsv'){const n=bd.n.trim(),pl=bd.p.filter(q=>q.s.length);if(!n)msg='Enter a name for the plot set.';else if(!pl.length)msg='Add at least one plot with data.';else{let k=bd.i;const o=db.ps.findIndex((x,j)=>j!==k&&x.n.toLowerCase()===n.toLowerCase());if(o>=0){if(!confirm('Replace the existing plot set "'+db.ps[o].n+'"?'))return;if(k>=0)db.ps.splice(k,1);k=db.ps.findIndex(x=>x.n.toLowerCase()===n.toLowerCase())}const s={id:k>=0?db.ps[k].id:uid(),n,p:pl};if(k>=0)db.ps[k]=s;else db.ps.push(s);save();msg='Saved plot set "'+n+'".';bd=null}}
  else if(a==='pso'){pv=i}
  else if(a==='psx'){pv=null}
  else if(a==='psd'){db.ps.splice(i,1);save()}
- else if(a==='psl'){const s=db.ps[pv];if(db.pp.slice(0,db.pn).some(p=>p&&p.length)&&!confirm('Replace your current plots with this set?'))return;db.pp=s.p.map(q=>JSON.parse(JSON.stringify(q.s)));db.pt=s.p.map(q=>q.t||'');db.pn=Math.max(1,Math.min(6,s.p.length));msg='Loaded "'+s.n+'" into the plots.';pv=null;save()}
- else if(a==='cs'){const pl=[];for(let k=0;k<db.pn;k++){const s=db.pp[k]||[];if(s.length)pl.push({t:db.pt[k]||'',s:JSON.parse(JSON.stringify(s))})}
-  if(!pl.length)msg='Select data for at least one plot first.';else{const n=(prompt('Plot set name')||'').trim();if(!n)return;const k=db.ps.findIndex(x=>x.n.toLowerCase()===n.toLowerCase());if(k>=0){if(!confirm('Replace the existing plot set "'+db.ps[k].n+'"?'))return;db.ps[k].p=pl}else db.ps.push({id:uid(),n,p:pl});save();msg='Saved plot set "'+n+'".'}}
+ else if(a==='pse'){const s=db.ps[pv];bd={i:pv,n:s.n,p:JSON.parse(JSON.stringify(s.p))};pv=null;msg=''}
  else if(a==='hc'){ed=null;hist=false}
  else if(a==='ex'){await exp();return}
  else if(a==='exw'){await out(new File(['Date,Body Weight\n'+bws().map(e=>e.d+','+e.v).join('\n')],'body-weight.csv',{type:'text/csv'}));return}
  else if(a==='bs'){const d=$('#bd').value,v=parseFloat($('#bv').value);if(!d||!(v>0))msg='Enter a date and a weight.';else{bwset(d,v);save();msg='Saved '+v+' '+U()+' for '+d+'.'}}
  else if(a==='bxd'){db.bw=db.bw.filter(e=>e.d!==D.d);save()}
  render()});
-document.addEventListener('input',ev=>{const t=ev.target,f=t.dataset.f;if(f==='pt'){if(pe)pe.t=t.value;return}if(f==='date'){if(ed&&hist&&t.value)ed.d=t.value+ed.d.slice(10);return}if(!f||!ed)return;if(f==='name')ed.n=t.value;else ed.x[+t.dataset.i].s[+t.dataset.j][f]=t.value;if(!hist)save()});
+document.addEventListener('input',ev=>{const t=ev.target,f=t.dataset.f;if(f==='bn'){if(bd)bd.n=t.value;return}if(f==='pt'){if(pe)pe.t=t.value;return}if(f==='date'){if(ed&&hist&&t.value)ed.d=t.value+ed.d.slice(10);return}if(!f||!ed)return;if(f==='name')ed.n=t.value;else ed.x[+t.dataset.i].s[+t.dataset.j][f]=t.value;if(!hist)save()});
 document.addEventListener('change',async ev=>{const t=ev.target,f=t.dataset.f;if(f==='date'&&ed&&hist&&t.value)ed.d=t.value+ed.d.slice(10);
  if(f==='px'||f==='pm'){if(f==='px')px=t.value;else pm=t.value;render()}
  if(f==='bwr'){bwr=+t.value;render()}
  if(f==='pr'){db.pr=+t.value;save();render()}
  if(f==='pn'){db.pn=+t.value;save();render()}
- if(f==='tg'){const i=+t.dataset.i;let v=t.value;if(v==='__none')v='';else if(v==='__new'){v=(prompt('Group name')||'').trim();const x=grps().find(g=>g.toLowerCase()===v.toLowerCase());if(x)v=x;if(!v){render();return}}db.t[i].g=v;save();render()}
  if(t.id==='wn'&&ed){let v=t.value;if(v==='__new'){v=(prompt('Workout name',ed.n)||'').trim();const x=wnames().find(n=>n.toLowerCase()===v.toLowerCase());if(x)v=x}if(v)ed.n=v;if(!hist)save();render()}
  if(t.id==='nx'&&t.value&&ed){let v=t.value;if(v==='__new'){v=(prompt('New exercise name')||'').trim();const x=names().find(n=>n.toLowerCase()===v.toLowerCase());if(x)v=x}if(v&&!ed.x.some(e=>e.n===v)){ed.x.push(mk(v));if(!hist)save()}render()}
  if(t.id==='f'&&t.files[0]){msg=imp(await t.files[0].text());render()}});
@@ -183,15 +171,15 @@ document.addEventListener('touchmove',e=>{if(!tx)return;const dx=e.touches[0].cl
 document.addEventListener('touchend',()=>{if(!tx)return;const r=tx.r;r.style.transition='';if(tx.m){const open=(tx.o?-90:0)+tx.d<-45;r.style.transform=open?'translateX(-90px)':'';r.classList.toggle('o',open);r.parentNode.classList.toggle('dr',open);sup=Date.now()}tx=null});
 let dr=null,dsup=0;
 const dclr=()=>document.querySelectorAll('.dtu,.dtd').forEach(x=>x.classList.remove('dtu','dtd'));
-function dtick(){if(!dr||!dr.on)return;const y=dr.ly;if(y<90)scrollBy(0,-12);else if(y>innerHeight-110)scrollBy(0,12);
- dr.c.style.transform=`translateY(${y-dr.y+scrollY-dr.s}px) scale(1.02)`;dclr();
+function dtick(){if(!dr||!dr.on)return;const y=dr.ly;if(y<90)dr.sc.scrollTop-=12;else if(y>innerHeight-110)dr.sc.scrollTop+=12;
+ dr.c.style.transform=`translateY(${y-dr.y+dr.sc.scrollTop-dr.s}px) scale(1.02)`;dclr();
  const o=[...document.querySelectorAll(`[data-drag="${dr.k}"]`)].filter(x=>x!==dr.c),r=dr.c.getBoundingClientRect(),m=r.top+r.height/2;
  dr.n=o.filter(x=>{const q=x.getBoundingClientRect();return q.top+q.height/2<m}).length;
  if(dr.n<o.length)o[dr.n].classList.add('dtu');else if(o.length)o[o.length-1].classList.add('dtd')}
 function dgo(){if(!dr)return;dr.on=1;dr.n=dr.i;if(tx){tx.r.style.transform=tx.o?'translateX(-90px)':'';tx=null}dr.c.classList.add('dg');dr.iv=setInterval(dtick,16)}
-function dmove(k,i,n){const mv=a=>a.splice(n,0,a.splice(i,1)[0]);if(k==='x'){mv(ed.x);if(!hist)save()}else{while(db.pp.length<db.pn)db.pp.push([]);while(db.pt.length<db.pn)db.pt.push('');mv(db.pp);mv(db.pt);save()}render()}
+function dmove(k,i,n){const mv=a=>a.splice(n,0,a.splice(i,1)[0]);if(k==='x'){mv(ed.x);if(!hist)save()}else{mv(bd.p)}render()}
 function dend(cancel){if(!dr)return;clearTimeout(dr.t);const d=dr;dr=null;if(!d.on)return;clearInterval(d.iv);dsup=Date.now();d.c.classList.remove('dg');d.c.style.transform='';dclr();if(!cancel&&d.n!==d.i)dmove(d.k,d.i,d.n)}
-document.addEventListener('touchstart',e=>{dend(1);if(e.touches.length>1)return;const c=e.target.closest('[data-drag]');if(!c||e.target.closest('input,select,button,label'))return;const t=e.touches[0];dr={c,k:c.dataset.drag,i:+c.dataset.i,x:t.clientX,y:t.clientY,ly:t.clientY,s:scrollY,on:0,t:setTimeout(dgo,450)}},{passive:true});
+document.addEventListener('touchstart',e=>{dend(1);if(e.touches.length>1)return;const c=e.target.closest('[data-drag]');if(!c||e.target.closest('input,select,button,label'))return;const t=e.touches[0],sc=c.closest('.ov')||document.scrollingElement;dr={c,sc,k:c.dataset.drag,i:+c.dataset.i,x:t.clientX,y:t.clientY,ly:t.clientY,s:sc.scrollTop,on:0,t:setTimeout(dgo,450)}},{passive:true});
 document.addEventListener('touchmove',e=>{if(!dr)return;const t=e.touches[0];if(!dr.on){if(Math.abs(t.clientY-dr.y)>10||Math.abs(t.clientX-dr.x)>10){clearTimeout(dr.t);dr=null}return}e.preventDefault();dr.ly=t.clientY},{passive:false});
 document.addEventListener('touchend',()=>dend());document.addEventListener('touchcancel',()=>dend(1));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
